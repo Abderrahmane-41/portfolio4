@@ -1,37 +1,46 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
-
-const formSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-})
 
 export default function NewsletterSubscribe() {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [email, setEmail] = useState("")
+  const [error, setError] = useState("")
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: "",
-    },
-  })
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateEmail(email)) {
+      setError("Please enter a valid email address.")
+      return
+    }
+
     setIsSubmitting(true)
     // Simulate API call
     setTimeout(() => {
-      console.log(values)
+      console.log({ email })
       setIsSubmitting(false)
-      form.reset()
+      setEmail("")
+      setError("")
       alert("Thank you for subscribing to our newsletter!")
     }, 2000)
+  }
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value)
+    if (error) {
+      setError("")
+    }
   }
 
   return (
@@ -47,25 +56,21 @@ export default function NewsletterSubscribe() {
           <p className="text-muted-foreground mb-6 text-center">
             Subscribe to our newsletter for the latest updates on minimal design and floral artistry.
           </p>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Input placeholder="Enter your email" {...field} className="rounded-full" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => handleEmailChange(e.target.value)}
+                className={`rounded-full ${error ? "border-red-500" : ""}`}
               />
-              <Button type="submit" className="w-full rounded-full" disabled={isSubmitting}>
-                {isSubmitting ? "Subscribing..." : "Subscribe"}
-              </Button>
-            </form>
-          </Form>
+              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+            </div>
+            <Button type="submit" className="w-full rounded-full" disabled={isSubmitting}>
+              {isSubmitting ? "Subscribing..." : "Subscribe"}
+            </Button>
+          </form>
         </motion.div>
       </div>
     </section>
